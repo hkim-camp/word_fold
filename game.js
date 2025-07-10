@@ -392,3 +392,34 @@ function play_again() {
         unselect(selected_x, selected_y);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Load the audio file.
+    // Ensure 'bruh.opus' is in the same folder or provide the correct path.
+    const clickSound = new Audio('Bruh.opus');
+
+    // Function to play the sound.
+    // Resetting currentTime allows the sound to play again even if it's already playing.
+    const playSound = () => {
+        // Randomize the playback rate to change the pitch.
+        // A range between 0.8 and 1.2 gives a nice variation.
+        clickSound.playbackRate = 0.8 + Math.random() * 0.4;
+        // Set preservesPitch to false to allow the pitch to change along with the playback rate.
+        clickSound.preservesPitch = false;
+
+        clickSound.currentTime = 0.5;
+        clickSound.play().catch(error => {
+            console.error("Error playing sound:", error);
+        });
+    };
+
+    // Get the container for the cells to use event delegation.
+    const cellHolder = document.querySelector('.cell-holder');
+
+    cellHolder.addEventListener('click', (event) => {
+        // Check if a non-empty cell was clicked
+        if (event.target.classList.contains('cell') && event.target.textContent.trim() !== '') {
+            playSound();
+        }
+    });
+});
