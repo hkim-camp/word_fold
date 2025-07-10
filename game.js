@@ -1,3 +1,8 @@
+// Create and add the color overlay element for a background visual effect.
+const colorOverlay = document.createElement('div');
+colorOverlay.className = 'color-overlay';
+document.body.prepend(colorOverlay);
+
 const boards = [
     {
         cells: [
@@ -155,7 +160,7 @@ function update_word_colors() {
             wordElement.classList.add('completed');
             const cellElement = wordsOnBoard.get(targetWord);
             cellElement.classList.add('completed');
-            cellElement.style.color = 'blue';
+            cellElement.style.color = 'rgb(131,131,131)';
             cellElement.style.cursor = 'not-allowed';
 
             // If the newly completed cell was the selected one, unselect it

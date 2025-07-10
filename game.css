@@ -7,15 +7,25 @@
     --neumorphic-shadow-inset: inset 5px 5px 8px #c7c7c7, inset -5px -5px 8px #ffffff;
     --border-radius: 50px;
     --spacing: 25px;
-    --color-1: #ff9100;
-    --color-2: #0084ff;
-    --color-3: #00ffb3;
-    --color-4: #9900ff;
 }
 
 body {
     font-family: Roboto, Helvetica, sans-serif;
     background-color: var(--background);
+}
+
+.color-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    animation: color-cycle 20s ease-in-out infinite;
+    mix-blend-mode: multiply;
+    /* Allows clicks to pass through to the game elements underneath */
+    pointer-events: none;
+    /* Places the overlay on top of the game content */
+    z-index: 1;
 }
 
 .container {
@@ -102,7 +112,7 @@ body {
 }
 
 .word-item.completed {
-    color: blue;
+    color: rgb(131, 131, 131);
     box-shadow: none;
 }
 
@@ -129,5 +139,32 @@ button:active {
 @media only screen and (max-width: 629px) {
     .cell {
         font-size: xx-small;
+    }
+}
+
+@keyframes color-cycle {
+    0% {
+        background-color: hsl(30, 90%, 60%);
+        /* Pastel Orange */
+    }
+
+    25% {
+        background-color: hsl(150, 90%, 60%);
+        /* Pastel Green */
+    }
+
+    50% {
+        background-color: hsl(200, 90%, 60%);
+        /* Pastel Blue */
+    }
+
+    75% {
+        background-color: hsl(280, 90%, 60%);
+        /* Pastel Purple */
+    }
+
+    100% {
+        background-color: hsl(30, 90%, 60%);
+        /* Back to start */
     }
 }
