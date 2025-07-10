@@ -65,16 +65,15 @@ function setup_game(starting_cells) {
  * to allow for individual styling.
  */
 function display_words() {
-    const wordsContainer = document.getElementById("words");
-    wordsContainer.innerHTML = "Words to spell: ";
-    currentBoard.words.forEach((word, index) => {
-        const wordSpan = document.createElement('span');
-        wordSpan.textContent = word;
-        wordSpan.id = `word-${word}`;
-        wordsContainer.appendChild(wordSpan);
-        if (index < currentBoard.words.length - 1) {
-            wordsContainer.append(', ');
-        }
+    const wordsContainer = document.getElementById('words');
+    wordsContainer.innerHTML = ''; // Clear previous content
+
+    currentBoard.words.forEach(word => {
+        const wordDiv = document.createElement('div');
+        wordDiv.textContent = word;
+        wordDiv.id = `word-${word}`;
+        wordDiv.className = 'word-item';
+        wordsContainer.appendChild(wordDiv);
     });
 }
 
@@ -92,13 +91,17 @@ function create_control_buttons() {
 
     const controlsDiv = document.createElement('div');
     controlsDiv.id = 'game-controls';
-    controlsDiv.style.marginTop = '15px';
+    controlsDiv.style.marginTop = '5%';
+    controlsDiv.style.display = 'flex';
+    controlsDiv.style.flexDirection = 'row';
+    controlsDiv.style.alignItems = 'center';
+    controlsDiv.style.justifyContent = 'center';
 
     const resetButton = document.createElement('button');
     resetButton.textContent = 'Reset Board';
     resetButton.onclick = reset_board;
     Object.assign(resetButton.style, {
-        fontSize: '1em', padding: '5px 10px', marginRight: '10px', cursor: 'pointer'
+        fontSize: '1em', cursor: 'pointer'
     });
 
     controlsDiv.appendChild(resetButton);
@@ -120,7 +123,6 @@ create_control_buttons();
 function move(x, y) {
     CELLS[y][x].innerHTML = CELLS[selected_y][selected_x].innerHTML + CELLS[y][x].innerHTML;
     CELLS[selected_y][selected_x].innerHTML = ""
-    CELLS[selected_y][selected_x].style.cursor = "not-allowed"
     select(x, y);
     update_word_colors();
     const hasWon = check_win();
@@ -146,15 +148,15 @@ function update_word_colors() {
 
     currentBoard.words.forEach(targetWord => {
         const wordElement = document.getElementById(`word-${targetWord}`);
+        if (!wordElement) return;
+
         if (wordsOnBoard.has(targetWord)) {
             // Word is completed on the board
-            if (wordElement) {
-                wordElement.style.color = 'lightgreen';
-            }
+            wordElement.classList.add('completed');
             const cellElement = wordsOnBoard.get(targetWord);
             cellElement.classList.add('completed');
-            cellElement.style.color = 'lightgreen';
-            cellElement.style.cursor = "not-allowed"
+            cellElement.style.color = 'blue';
+            cellElement.style.cursor = 'not-allowed';
 
             // If the newly completed cell was the selected one, unselect it
             // to prevent it from being moved.
@@ -165,9 +167,7 @@ function update_word_colors() {
             }
         } else {
             // Word is not completed
-            if (wordElement) {
-                wordElement.style.color = ''; // Reset to default
-            }
+            wordElement.classList.remove('completed');
         }
     });
 }
@@ -278,37 +278,57 @@ function check_lose() {
 }
 
 /**
- * Displays an end-game overlay (win or lose) with a "Play Again" button.
+ * Displays an end-game message inside the words container.
  * @param {string} message The message to display (e.g., "You Win!").
  */
 function show_end_screen(message) {
-    // Prevent multiple end screens
-    if (document.getElementById('end-screen')) {
-        return;
+    const wordsContainer = document.getElementById('words');
+    if (!wordsContainer) return;
+
+    // Prevent multiple end screens by checking if the message is already there
+    if (document.querySelector('.end-game-message')) return;
+
+    // Hide the "Words to Spell" heading if it exists
+    const heading = wordsContainer.previousElementSibling;
+    if (heading) {
+        heading.style.display = 'none';
     }
-    const endScreen = document.createElement('div');
-    endScreen.id = 'end-screen';
-    // Style the overlay
-    Object.assign(endScreen.style, {
-        position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)', display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', alignItems: 'center', color: 'white',
-        fontSize: '3em', textAlign: 'center', zIndex: '1000'
+
+    // Hide the regular game controls
+    const controlsContainer = document.getElementById('game-controls');
+    if (controlsContainer) {
+        controlsContainer.style.display = 'none';
+    }
+
+    // Clear the word list and prepare for the end-game message
+    wordsContainer.innerHTML = '';
+    wordsContainer.style.flexDirection = 'column';
+    wordsContainer.style.justifyContent = 'center'; // Center the content vertically
+
+    const messageEl = document.createElement('div');
+    messageEl.textContent = message;
+    messageEl.className = 'end-game-message'; // Add a class for potential styling
+    Object.assign(messageEl.style, {
+        fontSize: '1.5em',
+        fontWeight: 'bold',
+        marginBottom: '20px',
+        textAlign: 'center'
     });
 
-    endScreen.innerHTML = `<div>${message}</div><button onclick="play_again()" style="font-size: 0.5em; padding: 10px 20px; margin-top: 20px; cursor: pointer;">Play Again</button>`;
-    document.body.appendChild(endScreen);
+    const playAgainButton = document.createElement('button');
+    playAgainButton.textContent = 'Play Again';
+    playAgainButton.onclick = play_again;
+
+    wordsContainer.appendChild(messageEl);
+    wordsContainer.appendChild(playAgainButton);
 }
 
 /**
  * Resets the current game board to its starting state.
  */
 function reset_board() {
-    // Remove the end screen if it's visible
-    const endScreen = document.getElementById('end-screen');
-    if (endScreen) {
-        endScreen.remove();
-    }
+    // The end screen is no longer a separate element, so no removal is needed here.
+    // If the game had ended, the 'Reset' button would be hidden anyway.
 
     // Reset the board UI using the current board's initial state
     setup_game(currentBoard.cells);
@@ -324,10 +344,24 @@ function reset_board() {
  * Resets the game with a new, different random board without reloading the page.
  */
 function play_again() {
-    // Remove the end screen (win or lose)
-    const endScreen = document.getElementById('end-screen');
-    if (endScreen) {
-        endScreen.remove();
+    // Show the regular game controls again
+    const controlsContainer = document.getElementById('game-controls');
+    if (controlsContainer) {
+        controlsContainer.style.display = 'flex';
+    }
+
+    // Restore the flex direction for the words container
+    const wordsContainer = document.getElementById('words');
+    if (wordsContainer) {
+        // Show the "Words to Spell" heading again
+        const heading = wordsContainer.previousElementSibling;
+        if (heading) {
+            heading.style.display = ''; // Reset to default display
+        }
+
+        // Reset styles that might have been changed by the end screen
+        wordsContainer.style.flexDirection = 'row';
+        wordsContainer.style.justifyContent = 'center';
     }
 
     // Pick a new board index, ensuring it's different from the current one.
@@ -344,7 +378,7 @@ function play_again() {
     randomBoardIndex = newBoardIndex;
     currentBoard = boards[randomBoardIndex];
 
-    // Reset the board UI
+    // Reset the board UI. display_words() will clear the end-game message.
     setup_game(currentBoard.cells);
     display_words();
 
